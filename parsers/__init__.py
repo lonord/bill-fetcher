@@ -1,17 +1,17 @@
 """
-邮件解析器包
+Email Parser Package
 
-这个包包含了各种邮件格式的解析器，每个解析器都实现了标准的接口：
-- match(subject, sender): 判断邮件是否匹配该解析器
-- parse(msg, msg_id, output_dir): 解析邮件内容
-- extract(filename, extract_dir, config): 提取文件内容
+This package contains parsers for various email formats, each implementing a standard interface:
+- match(subject, sender): Determine if email matches this parser
+- parse(msg, msg_id, output_dir): Parse email content
+- extract(filename, extract_dir, config): Extract file content
 """
 
 from .parser_alipay import match as alipay_match, parse as alipay_parse, extract as alipay_extract
 from .parser_cmbcc import match as cmbcc_match, parse as cmbcc_parse, extract as cmbcc_extract
 from .parser_wechat import match as wechat_match, parse as wechat_parse, extract as wechat_extract
 
-# 所有可用的解析器
+# All available parsers
 PARSERS = [
     {
         "name": "支付宝",
@@ -34,24 +34,24 @@ PARSERS = [
 ]
 
 def get_parser_by_name(name):
-    """根据名称获取解析器"""
+    """Get parser by name"""
     for parser in PARSERS:
         if parser["name"] == name:
             return parser
     return None
 
 def get_all_parsers():
-    """获取所有解析器"""
+    """Get all parsers"""
     return PARSERS
 
 def find_matching_parser(subject, sender):
-    """根据邮件主题和发件人找到匹配的解析器"""
+    """Find matching parser based on email subject and sender"""
     for parser in PARSERS:
         if parser["match"](subject, sender):
             return parser
     return None
 
-# 为了向后兼容，也导出各个解析器模块
+# For backward compatibility, also export individual parser modules
 __all__ = [
     "PARSERS",
     "get_parser_by_name", 

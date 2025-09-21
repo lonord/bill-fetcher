@@ -57,7 +57,6 @@ def extract(filename, extract_dir, config):
         # Validate filename format
         base_filename = os.path.basename(filename)
         if not (base_filename.startswith("cmbcc_") and base_filename.endswith(".html")):
-            print(f"Error: Filename {base_filename} does not match expected format (should start with 'cmbcc_' and end with '.html')")
             return False, False
 
         with open(filename, 'r', encoding='utf-8') as f:

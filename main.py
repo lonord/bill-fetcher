@@ -39,7 +39,7 @@ def decode_mime_header(header_value):
         return ""
     
     try:
-        # 使用email.header.decode_header来解码MIME头
+        # Use email.header.decode_header to decode MIME headers
         decoded_parts = email.header.decode_header(header_value)
         decoded_string = ""
         
@@ -48,11 +48,11 @@ def decode_mime_header(header_value):
                 if encoding:
                     decoded_string += part.decode(encoding)
                 else:
-                    # 如果没有指定编码，尝试UTF-8
+                    # If no encoding specified, try UTF-8
                     try:
                         decoded_string += part.decode('utf-8')
                     except UnicodeDecodeError:
-                        # 如果UTF-8失败，使用latin-1作为fallback
+                        # If UTF-8 fails, use latin-1 as fallback
                         decoded_string += part.decode('latin-1')
             else:
                 decoded_string += part
@@ -87,22 +87,22 @@ def process_emails(config, output_dir, parsers):
         return False
 
     # Build search criteria
-    search_criteria = ["UNSEEN"]  # 默认搜索未读邮件
+    search_criteria = ["UNSEEN"]  # Default search for unread emails
     
-    # 如果配置了发件人过滤，添加到搜索条件中
+    # If sender filter is configured, add to search criteria
     sender_filter = config.get("sender_filter")
     if sender_filter:
         if isinstance(sender_filter, list):
-            # 多个发件人，使用 OR 条件
+            # Multiple senders, use OR condition
             sender_conditions = []
             for sender in sender_filter:
                 sender_conditions.append(f'FROM "{sender}"')
             search_criteria.append(f"({' OR '.join(sender_conditions)})")
         else:
-            # 单个发件人
+            # Single sender
             search_criteria.append(f'FROM "{sender_filter}"')
     
-    # 构建完整的搜索条件
+    # Build complete search criteria
     search_query = f"({' '.join(search_criteria)})"
     logging.info(f"Searching with criteria: {search_query}")
     
@@ -143,7 +143,7 @@ def process_emails(config, output_dir, parsers):
                     )
                     break
         if not parsed_success:
-            mail.store(num, "+FLAGS", "\\Unseen")
+            mail.store(num, "-FLAGS", "\\Seen")
             logging.info(f"No parser matched for email ID {num.decode()}")
 
     mail.close()
