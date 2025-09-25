@@ -1,0 +1,21 @@
+# Core dependencies
+PyYAML>=6.0
+requests>=2.28.0
+beautifulsoup4>=4.11.0
+
+# Standard library modules (included with Python)
+# imaplib - built-in
+# email - built-in  
+# os - built-in
+# argparse - built-in
+# logging - built-in
+# base64 - built-in
+# quopri - built-in
+# zipfile - built-in
+# shutil - built-in
+# tempfile - built-in
+# csv - built-in
+# io - built-in
+# re - built-in
+# subprocess - built-in
+# urllib.parse - built-in
