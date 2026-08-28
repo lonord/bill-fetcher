@@ -6,6 +6,8 @@ import email.header
 import base64
 import re
 
+from .zip_password import PasswordNotFoundError, recover_numeric_zip_password
+
 
 def match(subject, sender):
     return "支付宝" in (subject or "") or "支付宝" in (sender or "")
@@ -68,52 +70,25 @@ def extract(filename, extract_dir, config):
         return False, False
     
     try:
-        # Read password file path from config
-        password_file = config.get("password_file")
-        if not password_file or not os.path.exists(password_file):
-            print(f"  Password file not found: {password_file}")
-            return True, False
-        
-        # Read password list (from back to front)
-        with open(password_file, 'r', encoding='utf-8') as f:
-            passwords = [line.strip() for line in f.readlines() if line.strip()]
-        
-        if not passwords:
-            print(f"  No passwords found in password file: {password_file}")
-            return True, False
-        
-        # Try passwords from back to front
-        passwords.reverse()
-        
-        # Try to extract zip file
-        with zipfile.ZipFile(filename, 'r') as zip_ref:
-            for password in passwords:
-                try:
-                    # Create temporary directory
-                    with tempfile.TemporaryDirectory() as temp_dir:
-                        # Try to extract to temporary directory with password
-                        zip_ref.extractall(temp_dir, pwd=password.encode('utf-8'))
-                        print(f"  Successfully extracted with password: {password}")
-                        
-                        # Move files from temporary directory to extract_dir and add "alipay_" prefix
-                        for root, dirs, files in os.walk(temp_dir):
-                            for file in files:
-                                old_path = os.path.join(root, file)
-                                new_name = f"alipay_{file}"
-                                new_path = os.path.join(extract_dir, new_name)
-                                shutil.move(old_path, new_path)
-                                print(f"  Moved file: {file} -> {new_name}")
-                        
-                        return True, True
-                    
-                except (zipfile.BadZipFile, RuntimeError):
-                    # Wrong password, continue trying next one
-                    continue
-        
-        # All password attempts failed
-        print(f"  Failed to extract zip file: {filename} - no valid password found")
+        result = recover_numeric_zip_password(filename)
+        print(f"  Recovered six-digit ZIP password in {result.elapsed_seconds:.2f}s")
+
+        with zipfile.ZipFile(filename) as zip_ref:
+            with tempfile.TemporaryDirectory() as temp_dir:
+                zip_ref.extractall(temp_dir, pwd=result.password)
+
+                for root, dirs, files in os.walk(temp_dir):
+                    for file in files:
+                        old_path = os.path.join(root, file)
+                        new_name = f"alipay_{file}"
+                        new_path = os.path.join(extract_dir, new_name)
+                        shutil.move(old_path, new_path)
+                        print(f"  Moved file: {file} -> {new_name}")
+
+        return True, True
+    except PasswordNotFoundError as error:
+        print(f"  Failed to extract zip file: {filename} - {error}")
         return True, False
-        
     except Exception as e:
         print(f"  Error extracting Alipay zip file: {e}")
         return True, False

@@ -210,5 +210,6 @@ bills_example/
 config.yaml
 output/
 extract/
-password.txt
+native/zip_password
+.DS_Store
 .vscode/

@@ -26,7 +26,11 @@
 
 ```bash
 pip install pyyaml beautifulsoup4 requests
+./scripts/build_native.sh
 ```
+
+原生程序需要 C++17 编译器和 zlib 开发库。如果没有编译或无法运行，密码恢复会
+自动回退到 Python 实现。
 
 ## 配置说明
 
@@ -50,20 +54,10 @@ extract_dir: "extract"   # 提取后文件保存目录
 #   - "alipay@alipay.com"
 #   - "cmb@cmbchina.com"
 
-# 额外参数
-extra_params:
-  password_file: "password.txt"  # 解压密码文件路径
 ```
 
-### 2. 密码文件
-
-创建 `password.txt` 文件，每行一个解压密码（用于支付宝和微信支付的加密ZIP文件）：
-
-```
-password1
-password2
-password3
-```
+支付宝和微信支付 ZIP 的密码必须是 6 位纯数字。程序会自动遍历数字密码空间，
+恢复出的密码不会写入日志或磁盘。
 
 ## 使用方法
 
@@ -114,12 +108,17 @@ python main.py -c my_config.yaml
 bill-fetcher/
 ├── main.py                 # 主程序入口
 ├── config.yaml            # 配置文件
-├── password.txt           # 解压密码文件
+├── native/
+│   └── zip_password.cpp   # 高速原生 ZipCrypto 密码恢复
 ├── parsers/               # 解析器模块
 │   ├── __init__.py
 │   ├── parser_alipay.py   # 支付宝解析器
 │   ├── parser_cmbcc.py    # 招商银行信用卡解析器
-│   └── parser_wechat.py   # 微信支付解析器
+│   ├── parser_wechat.py   # 微信支付解析器
+│   └── zip_password.py    # 6 位数字 ZipCrypto 密码恢复
+├── scripts/
+│   └── build_native.sh    # 编译原生辅助程序
+├── tests/                 # 自动化测试
 ├── output/                # 邮件附件保存目录
 └── extract/               # 提取后文件保存目录
 ```
@@ -128,9 +127,8 @@ bill-fetcher/
 
 1. **邮箱安全**: 建议使用应用专用密码，不要使用主密码
 2. **网络连接**: 确保网络连接稳定，微信支付需要下载文件
-3. **7zip依赖**: 微信支付解压需要系统安装7zip命令行工具
+3. **ZIP 加密方式**: 自动恢复仅支持使用 6 位数字密码的传统 ZipCrypto 压缩包
 4. **文件权限**: 确保程序有读写output和extract目录的权限
-5. **密码文件**: 确保password.txt文件存在且包含正确的解压密码
 
 ## 故障排除
 
@@ -146,9 +144,8 @@ bill-fetcher/
    - 查看日志输出获取详细错误信息
 
 3. **解压失败**
-   - 确认password.txt文件存在
-   - 检查密码是否正确
-   - 微信支付需要安装7zip
+   - 确认压缩包密码是 6 位纯数字
+   - 确认压缩包使用传统 ZipCrypto，而不是 AES 加密
 
 4. **文件下载失败**
    - 检查网络连接

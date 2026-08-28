@@ -26,7 +26,11 @@ An automated Python tool that extracts billing information from emails and conve
 
 ```bash
 pip install pyyaml beautifulsoup4 requests
+./scripts/build_native.sh
 ```
+
+The native helper requires a C++17 compiler and zlib development files. If it is
+not built or cannot run, password recovery automatically falls back to Python.
 
 ## Configuration
 
@@ -50,20 +54,11 @@ extract_dir: "extract"   # directory to save extracted files
 #   - "alipay@alipay.com"
 #   - "cmb@cmbchina.com"
 
-# Extra parameters
-extra_params:
-  password_file: "password.txt"  # path to password file
 ```
 
-### 2. Password File
-
-Create a `password.txt` file with one password per line (for encrypted ZIP files from Alipay and WeChat Pay):
-
-```
-password1
-password2
-password3
-```
+Alipay and WeChat Pay ZIP passwords are expected to be exactly six digits. The
+program searches the numeric password space automatically and does not write the
+recovered password to logs or disk.
 
 ## Usage
 
@@ -114,12 +109,17 @@ python main.py -c my_config.yaml
 bill-fetcher/
 ├── main.py                 # Main program entry point
 ├── config.yaml            # Configuration file
-├── password.txt           # Password file for extraction
+├── native/
+│   └── zip_password.cpp   # Fast native ZipCrypto password recovery
 ├── parsers/               # Parser modules
 │   ├── __init__.py
 │   ├── parser_alipay.py   # Alipay parser
 │   ├── parser_cmbcc.py    # China Merchants Bank Credit Card parser
-│   └── parser_wechat.py   # WeChat Pay parser
+│   ├── parser_wechat.py   # WeChat Pay parser
+│   └── zip_password.py    # Six-digit numeric ZipCrypto password recovery
+├── scripts/
+│   └── build_native.sh    # Build the native helper
+├── tests/                 # Automated tests
 ├── output/                # Email attachment storage directory
 └── extract/               # Extracted file storage directory
 ```
@@ -128,9 +128,8 @@ bill-fetcher/
 
 1. **Email Security**: Recommend using app-specific passwords, not your main password
 2. **Network Connection**: Ensure stable network connection, WeChat Pay requires file downloads
-3. **7zip Dependency**: WeChat Pay extraction requires 7zip command-line tool installed on system
+3. **ZIP Encryption**: Automatic recovery supports traditional ZipCrypto archives with six-digit numeric passwords
 4. **File Permissions**: Ensure program has read/write permissions for output and extract directories
-5. **Password File**: Ensure password.txt file exists and contains correct extraction passwords
 
 ## Troubleshooting
 
@@ -146,9 +145,8 @@ bill-fetcher/
    - View log output for detailed error information
 
 3. **Extraction Failed**
-   - Confirm password.txt file exists
-   - Check if passwords are correct
-   - WeChat Pay requires 7zip installation
+   - Confirm the archive uses a six-digit numeric password
+   - Confirm the archive uses traditional ZipCrypto rather than AES encryption
 
 4. **File Download Failed**
    - Check network connection
